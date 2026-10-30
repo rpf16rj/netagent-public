@@ -1,0 +1,6 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+librouteros>=3.2
+pydantic-settings>=2.2
+httpx>=0.27
+# Storage: stdlib sqlite3 via asyncio.to_thread (no aiosqlite needed)
