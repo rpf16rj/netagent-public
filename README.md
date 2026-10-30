@@ -1,6 +1,6 @@
 # NetAgent
 
-**AI-assisted home network observability & control** — a real-time monitoring dashboard for a multi-site home network built on MikroTik routers, designed and implemented almost entirely through spec-driven collaboration with an AI coding agent.
+**AI-assisted network observability & control** — a real-time monitoring dashboard for a small multi-site network built on MikroTik routers, designed and implemented almost entirely through spec-driven collaboration with an AI coding agent.
 
 ![Overview](docs/screenshots/geral.png)
 
@@ -8,21 +8,21 @@
 
 ## Why this exists
 
-Two houses, two failover WAN links each, fiber between them, dozens of devices — and the classic home-lab question: *"what is my network actually doing right now?"*
+A network with multiple WAN links, failover between them, and dozens of devices — and the classic question every network nerd asks: *"what is it actually doing right now?"*
 
 The goals:
 
-- **See everything live** — link states (active/standby/down), throughput, latency, router health, who's eating bandwidth
-- **Know the baseline** — what's normal for my network, so anomalies mean something
+- **See everything live** — link states (active/standby/down), throughput, latency, router health, who's consuming bandwidth
+- **Know the baseline** — what "normal" looks like, so anomalies mean something
 - **Act safely** — let automation propose (and eventually execute) bounded actions under supervision
-- **Look good doing it** — a JARVIS-style HUD that treats the home network like a spaceship bridge
+- **Look good doing it** — a JARVIS-style HUD that treats network ops like a spaceship bridge
 
 ## What it does
 
 ### Dashboard (React + SSE, zero polling on the UI)
 
-- **Per-site pages** — each house gets its own view; a global view shows everything
-- **Live link cards** — state, RTT, per-link bandwidth (learned which interface each route actually uses — including traffic tunneled through the inter-site fiber)
+- **Per-site pages** — each site gets its own view; a global view shows everything
+- **Live link cards** — state, RTT, per-link bandwidth (the system learns which interface each route actually uses — including traffic tunneled through an inter-site link)
 - **Health score** (0–100) per link, composed from RTT vs. baseline, loss, and state
 - **Heatmap** of bandwidth, 7 days × 24 hours
 - **Uptime** per link over 24h / 7d
@@ -33,9 +33,10 @@ The goals:
 
 ### Data plane
 
-- **RouterOS API (TLS)** — polling both routers: interfaces, routes (matched by comment convention), DHCP leases, connection tracking, `/ping` RTT
-- **IPFIX collector** — both routers export flows; the backend aggregates per-local-IP rates → top talkers + per-IP history
-- **Access Point integration** — the Tenda RX2 web UI was **reverse-engineered from its minified JS bundle**: discovered the real login flow (XHR header contract + session cookie with an RFC-invalid `:` in the name that most HTTP clients silently drop), the `stok`+`sign` handshake, AES-CBC-encrypted responses, and the actual module names (`onlineList`, `systemStatus`)
+- **RouterOS API (TLS)** — polling routers: interfaces, routes (matched by comment convention), DHCP leases, connection tracking, `/ping` RTT
+- **IPFIX collector** — routers export flows; the backend aggregates per-local-IP rates → top talkers + per-IP history
+- **Access Point integration** — the AP's web UI was **reverse-engineered from its minified JS bundle**: discovered the real login flow (XHR header contract + a session cookie with an RFC-invalid `:` in the name that most HTTP clients silently drop), the `stok`+`sign` handshake, AES-CBC-encrypted responses, and the actual module names (`onlineList`, `wifiApScan`)
+- **Wi-Fi neighborhood scan** — nearby SSIDs aggregated by channel → congestion view + best-channel suggestion
 - **AdGuard Home** — DNS stats: queries, % blocked, top domains
 - **Scheduled speedtests** — measured capacity becomes the denominator for saturation %
 
@@ -51,7 +52,7 @@ The goals:
 - Every action: diff preview → approval → execute → verify → rollback + notification
 - Global kill switch for read-only mode
 
-![Casa Rodrigo](docs/screenshots/casa-rodrigo.png)
+![Site view](docs/screenshots/casa-rodrigo.png)
 
 ## How it was built (the AI part)
 
@@ -59,7 +60,7 @@ This project is itself an experiment: **can a spec-driven AI agent design, deplo
 
 - **Spec first** — architecture was written down and approved before any infrastructure was touched (LXC on Proxmox, FastAPI + SQLite + React, RouterOS API-SSL)
 - **Subagents for parallel work** — the frontend redesign, alert engine, and topology map were each delegated to independent agent tasks with precise specs
-- **Real debugging, not magic** — the hard problems were human-shaped: a `1ms179us` RTT format breaking the parser, an OOM-kill restart loop melting a Docker host, a Tenda login that 302-redirected instead of answering JSON until the correct XHR headers were discovered
+- **Real debugging, not magic** — the hard problems were human-shaped: a `1ms179us` RTT format breaking the parser, an OOM-kill restart loop melting a container host, an AP login that 302-redirected instead of answering JSON until the correct XHR headers were discovered
 - **Reverse engineering as a tool** — the access point's API was recovered by reading its minified JavaScript bundle, not from documentation
 
 ## Stack
@@ -74,7 +75,7 @@ This project is itself an experiment: **can a spec-driven AI agent design, deplo
 
 ```
 backend/app/     FastAPI backend — poller, ipfix, alerts, actions,
-                 wifi (Tenda), adguard, db, stream (SSE)
+                 wifi (AP client), adguard, db, stream (SSE)
 backend/tests/   unit tests
 frontend/src/    React SPA — HUD cards, topology map, charts
 docs/screenshots/
@@ -82,7 +83,7 @@ docs/screenshots/
 
 ## Privacy note
 
-Sanitized for public release: IPs, credentials, hostnames, and domain names were replaced with placeholders or blurred in screenshots. Deployment-specific values live in `.env` (never committed).
+Sanitized for public release: IPs, credentials, device names, and identifying details were replaced with placeholders or blurred in screenshots. Deployment-specific values live in `.env` (never committed).
 
 ## Status
 
