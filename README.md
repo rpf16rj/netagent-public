@@ -52,7 +52,7 @@ The goals:
 - Every action: diff preview → approval → execute → verify → rollback + notification
 - Global kill switch for read-only mode
 
-![Site view](docs/screenshots/casa-rodrigo.png)
+![Site view](docs/screenshots/site.png)
 
 ## How it was built (the AI part)
 
